@@ -10,7 +10,6 @@
             [throttler.core :refer [throttle-fn]]
             [clj-http.client :as client]
             [config.core :refer [env]]
-            [clojure.core.async :refer [>!!]]
             [robert.bruce :refer [try-try-again]]
             [clj-time.format :as clj-time-format])
   (:import [java.util UUID]
@@ -43,7 +42,7 @@
 (defn fetch-reddit-token
   "Fetch a new Reddit token."
   []
-  (status/add! "reddit-links-agent" "reddit" "authenticate" 1)
+  (status/send! "reddit-links-agent" "reddit" "authenticate" 1)
   (let [response (client/post
                     "https://www.reddit.com/api/v1/access_token"
                      {:as :text
@@ -136,7 +135,7 @@
 (defn fetch-page
   "Fetch the API result, return a page of Actions."
   [subreddit after-token]
-  (status/add! "reddit-links-agent" "reddit" "fetch-page" 1)
+  (status/send! "reddit-links-agent" "reddit" "fetch-page" 1)
   (let [url (str "https://oauth.reddit.com" subreddit "/new.json?sort=new&after=" after-token)]
     (log/info "Fetch" url)
     ; If the API returns an error
@@ -197,9 +196,9 @@
 
 (defn check-all-subreddits
   "Check all subreddits for unseen links."
-  [artifacts bundle-chan]
+  [artifacts callback]
   (log/info "Start crawl all Domains on Reddit at" (str (clj-time/now)))
-  (status/add! "reddit-links-agent" "process" "scan-subreddits" 1)
+  (status/send! "reddit-links-agent" "process" "scan-subreddits" 1)
   (let [[domain-list-url domain-list] (get artifacts "domain-list")
         [subreddit-list-url subreddit-list] (get artifacts "subreddit-list")
         this-domain-set (set (clojure.string/split domain-list #"\n"))
@@ -209,7 +208,7 @@
         ; Take 48 hours worth of pages to make sure we cover everything. The Percolator will dedupe.
         cutoff-date (-> 48 clj-time/hours clj-time/ago)]
     (reset! domain-set this-domain-set)
-    (doseq [subreddit nil]; subreddits
+    (doseq [subreddit subreddits]
       (swap! counter inc)
       (log/info "Query subreddit:" subreddit @counter "/" num-subreddits " = " (int (* 100 (/ @counter num-subreddits))) "%")
       (let [pages (fetch-parsed-pages-after subreddit cutoff-date)
@@ -220,12 +219,13 @@
                      :extra {:cutoff-date (str cutoff-date) :queried-subreddit subreddit}
                      :pages pages}]
         (log/info "Sending package...")
-        (>!! bundle-chan package))))
+        (callback package))))
   (log/info "Finished scan."))
 
 (def agent-definition
   {:agent-name "reddit-links-agent"
    :version version
+   :jwt (:reddit-links-jwt env)
    :schedule [{:name "check-all-subreddits"
               :seconds 86400 ; wait 1 day between runs
               :fixed-delay true

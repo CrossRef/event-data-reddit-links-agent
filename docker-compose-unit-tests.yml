@@ -6,9 +6,8 @@ services:
      - .:/usr/src/app
      - ./.m2-cache:/root/.m2
     environment:
-     - JWT_SECRETS=TEST,TEST2
-     - ARTIFACT_BASE=https://artifact.eventdata.crossref.org
-     - STATUS_SERVICE=http://status.eventdata.crossref.org
+     - GLOBAL_JWT_SECRETS=TEST,TEST2
+     - GLOBAL_ARTIFACT_URL_BASE=https://artifact.eventdata.crossref.org
      - REDDIT_APP_NAME=$REDDIT_APP_NAME
      - REDDIT_PASSWORD=$REDDIT_PASSWORD
      - REDDIT_CLIENT=$REDDIT_CLIENT

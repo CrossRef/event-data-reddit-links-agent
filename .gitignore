@@ -11,3 +11,4 @@ config
 .env
 .m2-cache
 .DS_Store
+docker-compose-demo.yml

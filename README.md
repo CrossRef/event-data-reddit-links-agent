@@ -24,11 +24,13 @@ To run as an agent, `lein run`. To update the rules in Gnip, which should be one
 
 ## Config
 
- - `PERCOLATOR_URL_BASE` e.g. https://percolator.eventdata.crossref.org
- - `JWT_TOKEN`
- - `STATUS_SERVICE_BASE`
- - `ARTIFACT_BASE`, e.g. https://artifact.eventdata.crossref.org
+Uses Event Data global configuration namespace. Shares authentication details with Reddit Agent, but has its own JWT as it's considered a separate source.
+
  - `REDDIT_APP_NAME` e.g. crossref-bot
  - `REDDIT_PASSWORD` 
  - `REDDIT_CLIENT` as listed in the Reddit prefs, e.g. `KeTpPh7XGZwrdg`
  - `REDDIT_SECRET` as listed in Reddit prefs
+ - `REDDIT_LINKS_JWT`
+ - `GLOBAL_ARTIFACT_URL_BASE`, e.g. https://artifact.eventdata.crossref.org
+ - `GLOBAL_KAFKA_BOOTSTRAP_SERVERS`
+ - `GLOBAL_STATUS_TOPIC`
